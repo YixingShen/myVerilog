@@ -26,6 +26,7 @@ module testbench;
     #20 y = 0;
     #20 x = 1;
     #40;
+	$dumpflush;
     end
 
     initial begin
