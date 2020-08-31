@@ -1,0 +1,62 @@
+#! /usr/local/iverilog/bin/vvp
+:ivl_version "11.0 (devel)" "(s20150603-642-g3bdb50da)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 10;
+:vpi_module "system";
+:vpi_module "vhdl_sys";
+:vpi_module "vhdl_textio";
+:vpi_module "v2005_math";
+:vpi_module "va_math";
+S_0000000000f12510 .scope module, "stimulus" "stimulus" 2 2;
+ .timescale -9 -10;
+v0000000000f41520_0 .var "x", 0 0;
+v0000000000f415c0_0 .var "y", 0 0;
+v0000000000f41660_0 .net "z", 0 0, L_0000000000f41700;  1 drivers
+S_0000000000f126a0 .scope module, "uut" "comparator" 2 9, 3 3 0, S_0000000000f12510;
+ .timescale -9 -10;
+    .port_info 0 /INPUT 1 "x";
+    .port_info 1 /INPUT 1 "y";
+    .port_info 2 /OUTPUT 1 "z";
+UDP_udp_syntax .udp/comb "udp_syntax", 2
+ ,"001"
+ ,"010"
+ ,"100"
+ ,"111";
+L_0000000000f41700 .udp UDP_udp_syntax, v0000000000f41520_0, v0000000000f415c0_0;
+v0000000000f46ca0_0 .net "x", 0 0, v0000000000f41520_0;  1 drivers
+v0000000000f12830_0 .net "y", 0 0, v0000000000f415c0_0;  1 drivers
+v0000000000f128d0_0 .net "z", 0 0, L_0000000000f41700;  alias, 1 drivers
+    .scope S_0000000000f12510;
+T_0 ;
+    %vpi_call 2 16 "$dumpfile", "test.vcd" {0 0 0};
+    %vpi_call 2 17 "$dumpvars", 32'sb00000000000000000000000000000000, S_0000000000f12510 {0 0 0};
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0000000000f41520_0, 0, 1;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0000000000f415c0_0, 0, 1;
+    %delay 200, 0;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0000000000f41520_0, 0, 1;
+    %delay 200, 0;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0000000000f415c0_0, 0, 1;
+    %delay 200, 0;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v0000000000f415c0_0, 0, 1;
+    %delay 200, 0;
+    %pushi/vec4 1, 0, 1;
+    %store/vec4 v0000000000f41520_0, 0, 1;
+    %delay 400, 0;
+    %end;
+    .thread T_0;
+    .scope S_0000000000f12510;
+T_1 ;
+    %vpi_call 2 31 "$monitor", "x=%d,y=%d,z=%d \012", v0000000000f41520_0, v0000000000f415c0_0, v0000000000f41660_0 {0 0 0};
+    %end;
+    .thread T_1;
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "stimulus.v";
+    "comparator.v";
