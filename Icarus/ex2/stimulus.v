@@ -1,5 +1,5 @@
 `timescale 1ns / 100ps
-module stimulus;
+module testbench;
     // Inputs
     reg x;
     reg y;
@@ -14,12 +14,12 @@ module stimulus;
 
     initial begin
 	$dumpfile("test.vcd");
-    $dumpvars(0,stimulus);
+    $dumpvars(0,testbench);
 
     // Initialize
     x = 0;
     y = 0;
-
+	#100;
     #20 x = 1;
     #20 y = 1;
     #20 y = 0;
