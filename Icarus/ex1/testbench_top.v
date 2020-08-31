@@ -1,5 +1,5 @@
 `timescale 1ns / 100ps
-module testbench;
+module top;
     // Inputs
     reg x;
     reg y;
@@ -14,7 +14,7 @@ module testbench;
 
     initial begin
 	$dumpfile("test.vcd");
-    $dumpvars(0,testbench);
+    $dumpvars(0,top);
 
     // Initialize
     x = 0;
