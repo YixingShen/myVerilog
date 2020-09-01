@@ -15,24 +15,24 @@ module top;
     );
 
     initial begin
-	$dumpfile("test.vcd");
+    $dumpfile("test.vcd");
     $dumpvars(0,top);
 
     // Initialize
     x = 0;
     y = 0;
-	#100;
+    #100;
     #20 x = 1;
     #20 y = 1;
     #20 y = 0;
     #20 x = 1;
     #40;
-	$dumpflush;
+    $dumpflush;
     end
 
     initial begin
     $monitor("x=%d,y=%d,z=%d \n",x,y,z);
-	//$monitorb("x=",x, " y=",y," z= ",z);
+    //$monitorb("x=",x, " y=",y," z= ",z);
     end
 
 endmodule
