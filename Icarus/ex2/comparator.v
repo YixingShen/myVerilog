@@ -1,3 +1,5 @@
+/* Written by referencedesigner.com */
+
 `timescale 1ns / 100ps
 
 module comparator(

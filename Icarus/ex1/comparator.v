@@ -1,3 +1,5 @@
+/* Written by referencedesigner.com */
+
 module comparator(
     input x,
     input y,
