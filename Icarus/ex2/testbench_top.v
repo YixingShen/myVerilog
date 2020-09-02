@@ -9,8 +9,8 @@ module top;
     wire z;
     // UUT
     comparator uut (
-        .x(x), 
-        .y(y), 
+        .x(x),
+        .y(y),
         .z(z)
     );
 
