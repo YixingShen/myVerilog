@@ -1,0 +1,84 @@
+$date
+	Mon Sep 07 10:23:47 2020
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module top $end
+$var wire 3 ! pcode [2:0] $end
+$var reg 4 " x [4:1] $end
+$scope module uut $end
+$var wire 4 # x [4:1] $end
+$var reg 3 $ pcode [2:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+bx $
+bz #
+bz "
+bx !
+$end
+#20000
+b0 !
+b0 $
+b0 "
+b0 #
+#40000
+b1 !
+b1 $
+b1 "
+b1 #
+#60000
+b10 !
+b10 $
+b10 "
+b10 #
+#80000
+b11 "
+b11 #
+#100000
+b11 !
+b11 $
+b100 "
+b100 #
+#120000
+b101 "
+b101 #
+#140000
+b110 "
+b110 #
+#160000
+b111 "
+b111 #
+#180000
+b100 !
+b100 $
+b1000 "
+b1000 #
+#200000
+b1001 "
+b1001 #
+#220000
+b1010 "
+b1010 #
+#240000
+b1011 "
+b1011 #
+#260000
+b1100 "
+b1100 #
+#280000
+b1101 "
+b1101 #
+#300000
+b1110 "
+b1110 #
+#320000
+b1111 "
+b1111 #
+#340000
