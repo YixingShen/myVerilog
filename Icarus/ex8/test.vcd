@@ -1,0 +1,128 @@
+$date
+	Mon Sep 07 14:57:51 2020
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	100ps
+$end
+$scope module top $end
+$var wire 1 ! Q $end
+$var reg 1 " Clock $end
+$var reg 1 # D $end
+$var reg 1 $ Rst $end
+$var integer 32 % i [31:0] $end
+$scope module uut $end
+$var wire 1 " Clock $end
+$var wire 1 # D $end
+$var wire 1 $ Rst $end
+$var reg 1 ! Q $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b0 %
+x$
+x#
+0"
+x!
+$end
+#30
+z$
+z#
+#60
+0!
+0$
+0#
+#90
+1$
+1#
+#100
+1!
+b1 %
+1"
+#190
+0#
+#200
+b10 %
+0"
+#300
+0!
+b11 %
+1"
+#390
+1#
+#400
+b100 %
+0"
+#490
+0#
+#500
+b101 %
+1"
+#590
+1#
+#600
+b110 %
+0"
+#700
+1!
+b111 %
+1"
+#800
+b1000 %
+0"
+#840
+0!
+0$
+#900
+b1001 %
+1"
+#1000
+b1010 %
+0"
+#1040
+1$
+#1100
+1!
+b1011 %
+1"
+#1200
+b1100 %
+0"
+#1240
+0#
+#1300
+0!
+b1101 %
+1"
+#1340
+1#
+#1400
+b1110 %
+0"
+#1440
+0#
+#1500
+b1111 %
+1"
+#1600
+b10000 %
+0"
+#1700
+b10001 %
+1"
+#1800
+b10010 %
+0"
+#1900
+b10011 %
+1"
+#2000
+b10100 %
+0"
+#2100
+b10101 %
+1"

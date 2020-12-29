@@ -16,13 +16,13 @@ module top;
 
     x = 4'bzzzz;
 
-	#20;
+    #20;
 
-	for (x = 0; x < 15; x++) begin
-	#20;
-	end //for (x = 0; x < 15; x++) begin
+    for (x = 0; x < 15; x++) begin
+        #20;
+    end //for (x = 0; x < 15; x++) begin
 
-	#20;
+    #20;
 
     $dumpflush;
     end //initial begin
