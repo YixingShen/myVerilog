@@ -1,4 +1,2 @@
-## 2021/01/13  
-
-## Simple Sync FIFO
-
+## A Simple Async FIFO
+2021/01/13
