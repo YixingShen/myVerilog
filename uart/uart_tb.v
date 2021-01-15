@@ -99,10 +99,10 @@ module uart_tb;
             @(posedge RxDone);
             TxValid = 0;
             
-            //if (TxByte != RxByte)
-            //    $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-            //else
-            //    $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            if (TxByte != RxByte)
+                $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            else
+                $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
         end
 
         $dumpflush;
