@@ -45,12 +45,13 @@ module uart_tb;
         UART_BAUDRATE
     )
     uart_rx_inst
-    (        .i_ResetN(ResetN),
-             .i_SysClock(SysClock),
-             .i_RxValid(RxValid),
-             .o_RxByte(RxByte),
-             .i_RxSerial(RxSerial),
-             .o_RxDone(RxDone)
+    (   
+        .i_ResetN(ResetN),
+        .i_SysClock(SysClock),
+        .i_RxValid(RxValid),
+        .o_RxByte(RxByte),
+        .i_RxSerial(RxSerial),
+        .o_RxDone(RxDone)
     );
     
     initial begin
