@@ -118,5 +118,43 @@ module uart_tx
             end
         endcase;
     end
+
+    //reg regIDLE;
+    //reg regSTART_BIT;
+    //reg regDATA_BITS;
+    //reg regSTOP_BIT;
+    //
+    //wire wireIDLE;
+    //wire wireSTART_BIT;
+    //wire wireDATA_BITS;
+    //wire wireSTOP_BIT;
+    //
+    //assign wireSTART_BIT = state == START_BIT;
+    //assign wireIDLE = state == IDLE;
+    //assign wireDATA_BITS = state == DATA_BITS;
+    //assign wireSTOP_BIT = state == STOP_BIT;
+    //
+    //always @(posedge i_SysClock, negedge i_ResetN) begin
+    //    if (!i_ResetN) begin
+    //        regIDLE = 0;
+    //        regSTART_BIT = 0;
+    //        regSTOP_BIT = 0;
+    //        regDATA_BITS = 0;
+    //    end
+    //    else begin
+    //        if (state == IDLE) begin
+    //            regIDLE = ~ regIDLE;
+    //        end
+    //        if (state == START_BIT) begin
+    //            regSTART_BIT = ~ regSTART_BIT;
+    //        end
+    //        if (state == DATA_BITS) begin
+    //            regDATA_BITS = ~ regDATA_BITS;
+    //        end
+    //        if (state == STOP_BIT) begin
+    //            regSTOP_BIT = ~ regSTOP_BIT;
+    //        end
+    //    end
+    //end
     
 endmodule

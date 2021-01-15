@@ -45,7 +45,7 @@ module uart_tb;
         UART_BAUDRATE
     )
     uart_rx_inst
-    (   
+    (
         .i_ResetN(ResetN),
         .i_SysClock(SysClock),
         .i_RxValid(RxValid),
@@ -99,10 +99,10 @@ module uart_tb;
             @(posedge RxDone);
             TxValid = 0;
             
-            if (TxDone != RxDone)
-                $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-            else
-                $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            //if (TxByte != RxByte)
+            //    $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            //else
+            //    $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
         end
 
         $dumpflush;
