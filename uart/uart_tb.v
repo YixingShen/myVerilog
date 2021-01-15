@@ -73,24 +73,28 @@ module uart_tb;
         @(posedge TxDone);
         @(posedge RxDone);
         TxValid = 0;
+        #(SYS_PERIOD);
 
         TxByte = 8'h00;
         TxValid = 1;
         @(posedge TxDone);
         @(posedge RxDone);
         TxValid = 0;
+        #(SYS_PERIOD);
 
         TxByte = 8'h55;
         TxValid = 1;
         @(posedge TxDone);
         @(posedge RxDone);
         TxValid = 0;
+        #(SYS_PERIOD);
 
         TxByte = 8'hAA;
         TxValid = 1;
         @(posedge TxDone);
         @(posedge RxDone);
         TxValid = 0;
+        #(SYS_PERIOD);
 
         repeat (10) begin
             TxByte = ($random) % 256;
@@ -98,6 +102,7 @@ module uart_tb;
             @(posedge TxDone);
             @(posedge RxDone);
             TxValid = 0;
+            #(SYS_PERIOD);
             
             if (TxByte != RxByte)
                 $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
