@@ -32,7 +32,6 @@ module uart_rx
     wire TimerInt;
     reg [4:0] BitCount;
     wire [15:0] MaxTimerCount;
-    reg db1,db2;
     reg [15:0] TimerCount;
 
     assign MaxTimerCount = (state == START_BIT) ? TIMER_COUNT_1 : TIMER_COUNT_2;
@@ -67,13 +66,10 @@ module uart_rx
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             state <= IDLE;
-            db1 <= 0;
-            db2 <= 0;
         end
         else begin
             if (state == START_BIT || state == DATA_BITS) begin
                 state <= TimerInt ? state_next : state;
-                db2 <= TimerInt ? ~db2 : db2;
             end
             else begin
                 state <= state_next;
@@ -111,7 +107,6 @@ module uart_rx
             if ((state == DATA_BITS) && (state_next == DATA_BITS) && (TimerInt)) begin
                 RxByte[7:0] <= {q2_RxSerial,RxByte[7:1]};
                 BitCount <= BitCount + 4'd1;
-                db1 <= ~db1;
             end
             else if (state == IDLE || state == STOP_BIT) begin
                 BitCount <= 4'd0;
