@@ -112,7 +112,7 @@ module uart_tx
                 TxSerial = 1'b1;
                 state_next = IDLE;
             end
-        endcase;
+        endcase
     end
 endmodule
 `resetall
