@@ -119,3 +119,4 @@ module uart_rx
     end
 
 endmodule
+`resetall

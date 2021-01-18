@@ -3,6 +3,12 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
+`define assert(signal, value) \
+        if (signal !== value) begin \
+            $display("ASSERTION FAILED in %m: signal != value"); \
+            $finish; \
+        end
+
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
@@ -67,7 +73,6 @@ module uart_tb;
         #(SYS_PERIOD*10);
         ResetN = 1;
         #(SYS_PERIOD*10);
-        
         TxByte = 8'hFF;
         TxValid = 1;
         @(posedge TxDone);
@@ -119,3 +124,4 @@ module uart_tb;
     end
 
 endmodule
+`resetall

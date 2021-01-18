@@ -34,16 +34,15 @@ module uart_tx
     wire TimerInt;
     wire [15:0] MaxTimerCount;
     reg [15:0] TimerCount;
-
     assign MaxTimerCount = TIMER_COUNT;
     assign TimerInt = (TimerCount == MaxTimerCount);
     
     always @(posedge i_SysClock, negedge i_ResetN) begin
-        if (!i_ResetN || !TimerEna) begin
+        if (!i_ResetN) begin
             TimerCount <= 16'd0;
         end
         else begin
-            if (TimerCount == MaxTimerCount)
+            if (TimerCount == MaxTimerCount || TimerEna == 0)
                TimerCount <= 16'd0;
             else
                TimerCount <= TimerCount + 16'd1;
@@ -60,6 +59,7 @@ module uart_tx
         else begin
             if (state >= START_BIT && state <= STOP_BIT) begin
                 state <= TimerInt ? state_next : state;
+
             end
             else
                 state <= state_next;
@@ -114,5 +114,5 @@ module uart_tx
             end
         endcase;
     end
-    
 endmodule
+`resetall
