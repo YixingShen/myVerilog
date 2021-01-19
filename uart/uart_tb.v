@@ -75,11 +75,13 @@ module uart_tb;
         #(SYS_PERIOD*1);
         @(negedge SysClock);
         ResetN = 1;
-        #(SYS_PERIOD*1);
+        #(SYS_PERIOD*10);
 
         TxByte = 8'h55;
         TxValid = 1;
-        #(SYS_PERIOD) TxValid = 0;
+        @(posedge SysClock);
+        @(posedge SysClock);
+        TxValid = 0;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
 
@@ -89,7 +91,9 @@ module uart_tb;
             $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
         TxByte = 8'h00;
         TxValid = 1;
-        #(SYS_PERIOD) TxValid = 0;
+        @(posedge SysClock);
+        @(posedge SysClock);
+        TxValid = 0;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
@@ -100,7 +104,9 @@ module uart_tb;
         
         TxByte = 8'hFF;
         TxValid = 1;
-        #(SYS_PERIOD) TxValid = 0;
+        @(posedge SysClock);
+        @(posedge SysClock);
+        TxValid = 0;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
@@ -111,7 +117,9 @@ module uart_tb;
         
         TxByte = 8'hAA;
         TxValid = 1;
-        #(SYS_PERIOD) TxValid = 0;
+        @(posedge SysClock);
+        @(posedge SysClock);
+        TxValid = 0;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
@@ -123,7 +131,9 @@ module uart_tb;
         repeat (10) begin
             TxByte = ($random) % 256;
             TxValid = 1;
-            #(SYS_PERIOD) TxValid = 0;
+            @(posedge SysClock);
+            @(posedge SysClock);
+            TxValid = 0;
             while (!TxDone) begin #1; end;
             while (!RxDone) begin #1; end;
             
