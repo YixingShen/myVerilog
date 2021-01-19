@@ -16,37 +16,36 @@ module uart_rx
     output wire o_RxDone
     );
 
-    parameter TIMER_COUNT_1 = (SYS_CLOCK / UART_BAUDRATE / 2);
-    parameter TIMER_COUNT_2 = (SYS_CLOCK / UART_BAUDRATE);
+    parameter MAX_TIMER_COUNT_HALF = (SYS_CLOCK / UART_BAUDRATE / 2);
+    parameter MAX_TIMER_COUNT_FULL = (SYS_CLOCK / UART_BAUDRATE);
 
-    parameter IDLE      = 0;
-    parameter START_BIT = 1;
-    parameter DATA_BITS = 2;
-    parameter STOP_BIT  = 3;
+    parameter IDLE      = 2'd0;
+    parameter START_BIT = 2'd1;
+    parameter DATA_BITS = 2'd2;
+    parameter STOP_BIT  = 2'd3;
 
-    reg [3:0] state, state_next;
+    reg [1:0] state, state_next;
     reg q1_RxSerial, q2_RxSerial;
     reg [7:0] RxByte; //LSB First
 
-    reg TimerEna;
     wire TimerInt;
     reg [4:0] BitCount;
-    wire [15:0] MaxTimerCount;
-    reg [15:0] TimerCount;
+    wire [$clog2(MAX_TIMER_COUNT_FULL):0] MaxTimerCount;
+    reg [$clog2(MAX_TIMER_COUNT_FULL):0] TimerCount;
 
-    assign MaxTimerCount = (state == START_BIT) ? TIMER_COUNT_1 : TIMER_COUNT_2;
+    assign MaxTimerCount = (state == START_BIT) ? MAX_TIMER_COUNT_HALF : MAX_TIMER_COUNT_FULL;
     assign TimerInt = (TimerCount == MaxTimerCount);
     assign o_RxByte = RxByte;
     
     always @(posedge i_SysClock, negedge i_ResetN) begin
-        if (!i_ResetN || !TimerEna) begin
-            TimerCount <= 16'd0;
-        end
-        else begin
-            if (TimerCount == MaxTimerCount)
-               TimerCount <= 16'd0;
-            else
-               TimerCount <= TimerCount + 16'd1;
+        if (!i_ResetN) begin
+            TimerCount <= 0;
+        end else begin
+            if (TimerCount == MaxTimerCount || (state == IDLE && state_next == IDLE)) begin
+                TimerCount <= 0;
+            end else begin
+                TimerCount <= TimerCount + 1;
+            end
         end
     end
 
@@ -54,10 +53,9 @@ module uart_rx
 
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
-            q1_RxSerial <= 1'b1;
-            q2_RxSerial <= 1'b1;
-        end
-        else begin
+            q1_RxSerial <= 1;
+            q2_RxSerial <= 1;
+        end else begin
             q1_RxSerial <= i_RxSerial; //Meta Stable
             q2_RxSerial <= q1_RxSerial;
         end
@@ -66,12 +64,10 @@ module uart_rx
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             state <= IDLE;
-        end
-        else begin
+        end else begin
             if (state == START_BIT || state == DATA_BITS) begin
                 state <= TimerInt ? state_next : state;
-            end
-            else begin
+            end else begin
                 state <= state_next;
             end
         end
@@ -80,16 +76,16 @@ module uart_rx
     always @(*) begin
         case (state)
             IDLE: begin
-                state_next = (q2_RxSerial == 1'b0) ? START_BIT : IDLE;
+                state_next = (q2_RxSerial == 0) ? START_BIT : IDLE;
             end
             START_BIT: begin
                 state_next = DATA_BITS;
             end
             DATA_BITS: begin
-                state_next = (BitCount == 4'd8) ? STOP_BIT : DATA_BITS;
+                state_next = (BitCount == 8) ? STOP_BIT : DATA_BITS;
             end
             STOP_BIT: begin
-                state_next = (q2_RxSerial == 1'b0) ? START_BIT : IDLE;
+                state_next = (q2_RxSerial == 0) ? START_BIT : IDLE;
             end
             default: begin
                 state_next = IDLE;
@@ -99,21 +95,14 @@ module uart_rx
         
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
-            BitCount <= 4'd0;
-            RxByte <= 8'd0;
-            TimerEna <= 1'b0;
-        end
-        else begin
-            if ((state == DATA_BITS) && (state_next == DATA_BITS) && (TimerInt)) begin
-                RxByte[7:0] <= {q2_RxSerial,RxByte[7:1]};
-                BitCount <= BitCount + 4'd1;
-            end
-            else if (state == IDLE || state == STOP_BIT) begin
-                BitCount <= 4'd0;
-                TimerEna <= 1'b0;
-            end
-            else if (state == START_BIT) begin
-                TimerEna <= 1'b1;
+            BitCount <= 0;
+            RxByte <= 0;
+        end else begin
+            if (state == DATA_BITS && state_next == DATA_BITS) begin
+                RxByte <= TimerInt ? {q2_RxSerial,RxByte[7:1]} : RxByte;
+                BitCount <= TimerInt ? BitCount + 1 : BitCount;
+            end else if (state == IDLE || state == STOP_BIT) begin
+                BitCount <= 0;
             end
         end
     end

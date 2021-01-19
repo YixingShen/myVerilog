@@ -12,7 +12,8 @@
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter UART_BAUDRATE = 115200;
+    parameter UART_BAUDRATE = SYS_CLOCK/7;//115200;
+    //parameter UART_BAUDRATE = 115200;
 
     reg SysClock;
     reg ResetN;
@@ -70,44 +71,61 @@ module uart_tb;
         TxValid = 0;
         TxByte = 0;
         RxValid = 0;
-        #(SYS_PERIOD*10);
+        
+        #(SYS_PERIOD*1);
+        @(negedge SysClock);
         ResetN = 1;
-        #(SYS_PERIOD*10);
-        TxByte = 8'hFF;
-        TxValid = 1;
-        @(posedge TxDone);
-        @(posedge RxDone);
-        TxValid = 0;
-        #(SYS_PERIOD);
-
-        TxByte = 8'h00;
-        TxValid = 1;
-        @(posedge TxDone);
-        @(posedge RxDone);
-        TxValid = 0;
-        #(SYS_PERIOD);
+        #(SYS_PERIOD*1);
 
         TxByte = 8'h55;
         TxValid = 1;
-        @(posedge TxDone);
-        @(posedge RxDone);
-        TxValid = 0;
-        #(SYS_PERIOD);
+        #(SYS_PERIOD) TxValid = 0;
+        while (!TxDone) begin #1; end;
+        while (!RxDone) begin #1; end;
 
+        if (TxByte != RxByte)
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        TxByte = 8'h00;
+        TxValid = 1;
+        #(SYS_PERIOD) TxValid = 0;
+        while (!TxDone) begin #1; end;
+        while (!RxDone) begin #1; end;
+        
+        if (TxByte != RxByte)
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        
+        TxByte = 8'hFF;
+        TxValid = 1;
+        #(SYS_PERIOD) TxValid = 0;
+        while (!TxDone) begin #1; end;
+        while (!RxDone) begin #1; end;
+        
+        if (TxByte != RxByte)
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        
         TxByte = 8'hAA;
         TxValid = 1;
-        @(posedge TxDone);
-        @(posedge RxDone);
-        TxValid = 0;
-        #(SYS_PERIOD);
-
+        #(SYS_PERIOD) TxValid = 0;
+        while (!TxDone) begin #1; end;
+        while (!RxDone) begin #1; end;
+        
+        if (TxByte != RxByte)
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            
         repeat (10) begin
             TxByte = ($random) % 256;
             TxValid = 1;
-            @(posedge TxDone);
-            @(posedge RxDone);
-            TxValid = 0;
-            #(SYS_PERIOD);
+            #(SYS_PERIOD) TxValid = 0;
+            while (!TxDone) begin #1; end;
+            while (!RxDone) begin #1; end;
             
             if (TxByte != RxByte)
                 $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);

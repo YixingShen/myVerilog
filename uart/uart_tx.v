@@ -16,72 +16,66 @@ module uart_tx
     output wire o_TxDone
     );
 
-    parameter TIMER_COUNT = (SYS_CLOCK / UART_BAUDRATE);
+    parameter MAX_TIMER_COUNT = (SYS_CLOCK / UART_BAUDRATE);
 
-    parameter IDLE      = 0;
-    parameter START_BIT = 1;
-    parameter DATA_BITS = 2;
-    parameter STOP_BIT  = 3;
+    parameter IDLE      = 2'd0;
+    parameter START_BIT = 2'd1;
+    parameter DATA_BITS = 2'd2;
+    parameter STOP_BIT  = 2'd3;
 
-    reg [3:0] state, state_next;
+    reg [1:0] state, state_next;
 
-    reg TxSerial;
     reg TxValid;
-    reg [7:0] TxByte; //LSB First
-    reg [2:0] BitCount;
+    reg [8:0] Dout; //LSB First
+    reg [3:0] BitCount;
 
-    reg TimerEna;
     wire TimerInt;
-    wire [15:0] MaxTimerCount;
-    reg [15:0] TimerCount;
-    assign MaxTimerCount = TIMER_COUNT;
-    assign TimerInt = (TimerCount == MaxTimerCount);
+    reg [$clog2(MAX_TIMER_COUNT):0] TimerCount;
+
+    assign TimerInt = (TimerCount == MAX_TIMER_COUNT);
     
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
-            TimerCount <= 16'd0;
-        end
-        else begin
-            if (TimerCount == MaxTimerCount || TimerEna == 0)
-               TimerCount <= 16'd0;
-            else
-               TimerCount <= TimerCount + 16'd1;
+            TimerCount <= 0;
+        end else begin
+            if (TimerCount == MAX_TIMER_COUNT || (state == IDLE && state_next == IDLE)) begin
+               TimerCount <= 0;
+            end else begin
+               TimerCount <= TimerCount + 1;
+            end
         end
     end
 
-    assign o_TxSerial = TxSerial;
-    assign o_TxDone = (state == IDLE) || (state == STOP_BIT);
+    assign o_TxSerial = (state == IDLE && state_next == IDLE) || state == STOP_BIT ? 1 : Dout[0];
+    assign o_TxDone = (state == IDLE);
 
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             state <= IDLE;
-        end
-        else begin
+        end else begin
             if (state >= START_BIT && state <= STOP_BIT) begin
                 state <= TimerInt ? state_next : state;
-
-            end
-            else
+            end else begin
                 state <= state_next;
+            end
         end
     end
 
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
-            TimerEna <= 1'b0;
-            BitCount <= 3'd0;
-        end
-        else begin
-            if (state == DATA_BITS) begin
-                BitCount <= BitCount + TimerInt;
+            Dout <= {i_TxByte,1'b0};
+            BitCount <= 0;
+        end else begin
+            if (state == DATA_BITS)  begin
+                BitCount <= TimerInt ? BitCount + 1 : BitCount;
+            end else begin
+                BitCount <= 0;
             end
-            else if (state == START_BIT) begin
-                TimerEna <= 1'b1;
-                BitCount <= 3'd0;
-                TxByte <= i_TxByte;
-            end
-            else if (state == IDLE) begin
-                TimerEna <= 1'b0;
+
+            if (state == START_BIT || state == DATA_BITS) begin
+                Dout <= TimerInt ? {Dout[0],Dout[8:1]} : Dout;
+            end else begin
+                Dout <= {i_TxByte,1'b0};
             end
         end
     end
@@ -89,27 +83,18 @@ module uart_tx
     always @(*) begin
         case (state)
             IDLE: begin
-                TxSerial = 1'b1;
                 state_next = i_TxValid ? START_BIT : IDLE;
             end
             START_BIT: begin
-                TxSerial = 1'b0;
                 state_next = DATA_BITS;
             end
             DATA_BITS: begin
-                TxSerial = TxByte[BitCount];
-
-                if (BitCount == 3'd7)
-                    state_next = STOP_BIT;
-                else
-                    state_next = DATA_BITS;
+                state_next = (BitCount == 7) ? STOP_BIT : DATA_BITS;
             end
             STOP_BIT: begin
-                TxSerial = 1'b1;
                 state_next = i_TxValid ? START_BIT : IDLE;
             end
             default: begin
-                TxSerial = 1'b1;
                 state_next = IDLE;
             end
         endcase
