@@ -1,4 +1,4 @@
-//20210116 UART TX/RX Test Bench
+//20210120 UART TX/RX Test Bench
 
 `timescale 1 ns / 1 ps
 `default_nettype none
@@ -12,8 +12,7 @@
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter UART_BAUDRATE = SYS_CLOCK/7;//115200;
-    //parameter UART_BAUDRATE = 115200;
+    parameter UART_BAUDRATE = 115200;
 
     reg SysClock;
     reg ResetN;
@@ -76,6 +75,7 @@ module uart_tb;
         @(negedge SysClock);
         ResetN = 1;
         #(SYS_PERIOD*10);
+        @(negedge SysClock);
 
         TxByte = 8'h55;
         TxValid = 1;
@@ -85,11 +85,12 @@ module uart_tb;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
 
-        if (TxByte != RxByte)
-            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        else
+        if (TxByte == RxByte)
             $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        TxByte = 8'h00;
+        else
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+
+        TxByte = 8'hAA;
         TxValid = 1;
         @(posedge SysClock);
         @(posedge SysClock);
@@ -97,10 +98,10 @@ module uart_tb;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
-        if (TxByte != RxByte)
-            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        else
+        if (TxByte == RxByte)
             $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
         
         TxByte = 8'hFF;
         TxValid = 1;
@@ -110,10 +111,10 @@ module uart_tb;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
-        if (TxByte != RxByte)
-            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        else
+        if (TxByte == RxByte)
             $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
         
         TxByte = 8'hAA;
         TxValid = 1;
@@ -123,10 +124,10 @@ module uart_tb;
         while (!TxDone) begin #1; end;
         while (!RxDone) begin #1; end;
         
-        if (TxByte != RxByte)
-            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        else
+        if (TxByte == RxByte)
             $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+        else
+            $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
             
         repeat (10) begin
             TxByte = ($random) % 256;
@@ -137,11 +138,13 @@ module uart_tb;
             while (!TxDone) begin #1; end;
             while (!RxDone) begin #1; end;
             
-            if (TxByte != RxByte)
-                $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-            else
+            if (TxByte == RxByte)
                 $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-        end
+            else
+                $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
+            end
+
+        #(SYS_PERIOD*100);
 
         $dumpflush;
         $finish;

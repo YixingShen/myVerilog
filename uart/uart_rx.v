@@ -1,7 +1,8 @@
-//20210116 UART RX
+//20210120 UART RX
 
 `timescale 1 ns / 1 ps
 `default_nettype none
+`define DBG
 
 module uart_rx
     #(
@@ -16,39 +17,26 @@ module uart_rx
     output wire o_RxDone
     );
 
-    parameter MAX_TIMER_COUNT_HALF = (SYS_CLOCK / UART_BAUDRATE / 2);
-    parameter MAX_TIMER_COUNT_FULL = (SYS_CLOCK / UART_BAUDRATE);
+    parameter MAX_CYCLE_CNT_HALF = (SYS_CLOCK / UART_BAUDRATE / 2);
+    parameter MAX_CYCLE_CNT_FULL = (SYS_CLOCK / UART_BAUDRATE);
 
     parameter IDLE      = 2'd0;
     parameter START_BIT = 2'd1;
     parameter DATA_BITS = 2'd2;
     parameter STOP_BIT  = 2'd3;
 
-    reg [1:0] state, state_next;
+    reg [1:0] state;
     reg q1_RxSerial, q2_RxSerial;
     reg [7:0] RxByte; //LSB First
+    reg StopBit;
 
-    wire TimerInt;
-    reg [4:0] BitCount;
-    wire [$clog2(MAX_TIMER_COUNT_FULL):0] MaxTimerCount;
-    reg [$clog2(MAX_TIMER_COUNT_FULL):0] TimerCount;
+    reg [3:0] bit_cnt;
+    reg [$clog2(MAX_CYCLE_CNT_FULL):0] cycle_cnt;
+`ifdef DBG
+    reg [7:0] dbg;
+`endif
 
-    assign MaxTimerCount = (state == START_BIT) ? MAX_TIMER_COUNT_HALF : MAX_TIMER_COUNT_FULL;
-    assign TimerInt = (TimerCount == MaxTimerCount);
     assign o_RxByte = RxByte;
-    
-    always @(posedge i_SysClock, negedge i_ResetN) begin
-        if (!i_ResetN) begin
-            TimerCount <= 0;
-        end else begin
-            if (TimerCount == MaxTimerCount || (state == IDLE && state_next == IDLE)) begin
-                TimerCount <= 0;
-            end else begin
-                TimerCount <= TimerCount + 1;
-            end
-        end
-    end
-
     assign o_RxDone = (state == IDLE) || (state == STOP_BIT);
 
     always @(posedge i_SysClock, negedge i_ResetN) begin
@@ -64,46 +52,73 @@ module uart_rx
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             state <= IDLE;
-        end else begin
-            if (state == START_BIT || state == DATA_BITS) begin
-                state <= TimerInt ? state_next : state;
-            end else begin
-                state <= state_next;
-            end
-        end
-    end
-
-    always @(*) begin
-        case (state)
-            IDLE: begin
-                state_next = (q2_RxSerial == 0) ? START_BIT : IDLE;
-            end
-            START_BIT: begin
-                state_next = DATA_BITS;
-            end
-            DATA_BITS: begin
-                state_next = (BitCount == 8) ? STOP_BIT : DATA_BITS;
-            end
-            STOP_BIT: begin
-                state_next = (q2_RxSerial == 0) ? START_BIT : IDLE;
-            end
-            default: begin
-                state_next = IDLE;
-            end
-        endcase;
-    end
-        
-    always @(posedge i_SysClock, negedge i_ResetN) begin
-        if (!i_ResetN) begin
-            BitCount <= 0;
+            bit_cnt <= 0;
+            cycle_cnt <= 0;
             RxByte <= 0;
+            StopBit <= 0;
+`ifdef DBG
+            dbg <= 0;
+`endif
         end else begin
-            if (state == DATA_BITS && state_next == DATA_BITS) begin
-                RxByte <= TimerInt ? {q2_RxSerial,RxByte[7:1]} : RxByte;
-                BitCount <= TimerInt ? BitCount + 1 : BitCount;
-            end else if (state == IDLE || state == STOP_BIT) begin
-                BitCount <= 0;
-            end
+            case (state)
+                IDLE: begin
+                    state <= (q2_RxSerial == 0) ? START_BIT : IDLE;
+`ifdef DBG
+                    dbg[0] <= ~dbg[0];
+`endif
+                end
+                START_BIT: begin
+                    if (cycle_cnt != MAX_CYCLE_CNT_HALF) begin
+                        cycle_cnt <= cycle_cnt + 1;
+`ifdef DBG
+                        dbg[1] <= ~dbg[1];
+`endif
+                    end else begin
+                        state <= DATA_BITS;
+                        cycle_cnt <= 0;
+                        bit_cnt <= 0;
+                        StopBit <= 0;
+`ifdef DBG
+                        dbg[2] <= ~dbg[2];
+`endif
+                    end
+                end
+                DATA_BITS: begin
+                    if (cycle_cnt != MAX_CYCLE_CNT_FULL) begin
+                        cycle_cnt <= cycle_cnt + 1;
+`ifdef DBG
+                        dbg[3] <= ~dbg[3];
+`endif
+                    end else begin
+                        if (bit_cnt != 8) begin
+                            bit_cnt <= bit_cnt + 1;
+                            RxByte <= {q2_RxSerial,RxByte[7:1]};
+`ifdef DBG
+                            dbg[4] <= ~dbg[4];
+`endif
+                        end else begin
+                            state <= STOP_BIT;
+`ifdef DBG
+                            dbg[5] <= ~dbg[5];
+`endif
+                        end
+
+                        cycle_cnt <= 0;
+                    end
+                end
+                STOP_BIT: begin
+                    state <= (q2_RxSerial == 0) ? START_BIT : IDLE;
+                    StopBit <= q2_RxSerial;
+`ifdef DBG
+                    dbg[7] <= ~dbg[7];
+`endif
+                end
+                default: begin
+                    state <= IDLE;
+                    cycle_cnt <= 0;
+                    bit_cnt <= 0;
+                end
+            endcase
         end
     end
 
