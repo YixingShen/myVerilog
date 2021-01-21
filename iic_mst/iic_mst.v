@@ -55,7 +55,6 @@ module iic_mst
     wire clockStretchCond;
     wire iicSCLPreiodDiv1Cond;
     wire iicSCLPreiodDiv2Cond;
-    reg dbg;
 
     assign io_SCL = SCL_oe ? 1'b0 : 1'bz;
     assign io_SDA = SDA_oe ? 1'b0 : 1'bz;
@@ -71,24 +70,19 @@ module iic_mst
     assign iicSCLPreiodDiv2Cond = (cycle_cnt >= (IIC_SCL_PERIOD_MAX_CNT/2));
     assign iicSCLPreiodDiv1Cond = (cycle_cnt >= IIC_SCL_PERIOD_MAX_CNT);
     assign readCmd = Cmd == CMD_RDDATA;
-    
+
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             SCL_oe <= 0;
             SDA_oe <= 0;
             SetAck <= 0;
             GetAck <= 0;
-        end
-    end
-
-    always @(posedge i_SysClock, negedge i_ResetN) begin
-        if (!i_ResetN) begin
             Cmd <= CMD_NULL;
             cycle_cnt <= 0;
             bit_cnt <= 0;
             CmdNext <= 0;
-            dbg <= 0;
             waitSCL_cnt <= 0;
+            RxByte <= 0;
         end else begin
             if (i_CmdValid && Cmd == CMD_NULL) begin
                 Cmd <= i_Cmd;
@@ -97,10 +91,8 @@ module iic_mst
                 CmdNext <= 0;
                 waitSCL_cnt <= 0;
                 SetAck <= i_SetAck;
-                
+
                 if (i_Cmd == CMD_RDDATA) begin
-                    RxByte <= 0;
-                end else begin
                     TxByte <= i_TxByte;
                 end
             end
@@ -142,7 +134,6 @@ module iic_mst
                         GetAck <= (bit_cnt == 8) ? SDA_in : GetAck;
                         TxByte <= bit_cnt < 8 ? {TxByte[6:0],TxByte[7]} : TxByte;
                         RxByte <= (readCmd && bit_cnt < 8) ? {RxByte[6:0],SDA_in} : RxByte;
-                        dbg <= ~dbg;
                         cycle_cnt <= 0;
                     end
                 end

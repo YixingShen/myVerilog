@@ -36,7 +36,6 @@ module iic_mst_tb;
     //tri1 slvSDA_Pin; //tri status pull high
     wire slvSCL_Pin;
     wire slvSDA_Pin;
-    reg toggle,toggle1,toggle2;
 
     pullup (slvSCL_Pin);
     pullup (slvSDA_Pin);
@@ -77,9 +76,6 @@ module iic_mst_tb;
         mstTxByte = 8'h00;
         mstCmdValid = 0;
         mstSetAck = 0;
-        toggle = 0;
-        toggle1 = 0;
-        toggle2 = 0;
 
         #(SYS_PERIOD*10);
         ResetN = 1;
@@ -109,7 +105,6 @@ module iic_mst_tb;
                 slvSDA_oe = slvTxByte_r[7] == 0 ? 1 : 0;
                 slvTxByte_r = {slvTxByte_r[6:0],slvTxByte_r[7]};
                 while (slvSCL_Pin == 0) #1;
-                toggle = ~toggle;
             end
 
             @(negedge slvSCL_Pin); //8th clock Falling
@@ -143,7 +138,6 @@ module iic_mst_tb;
                 slvSDA_oe = slvTxByte_r[7] == 0 ? 1 : 0;
                 slvTxByte_r = {slvTxByte_r[6:0],slvTxByte_r[7]};
                 while (slvSCL_Pin == 0) #1;
-                toggle = ~toggle;
             end
 
             while (mstDone == 0) #SYS_PERIOD; 
@@ -196,7 +190,6 @@ module iic_mst_tb;
                 while (slvSCL_Pin == 0) #1;
                 
                 slvRxByte = {slvRxByte[6:0],slvSDA_Pin};
-                toggle = ~toggle;
             end
 
             @(negedge slvSCL_Pin); //8th clock Falling
@@ -264,27 +257,6 @@ module iic_mst_tb;
        $dumpflush;
        $finish;
     end
-    
-    always @(posedge slvSCL_Pin, negedge ResetN) begin
-        if (!ResetN)
-            toggle1 <= 0;
-        else
-            toggle1 <= ~toggle1;
-    end
-    
-    always @(negedge slvSCL_Pin, negedge ResetN) begin
-        if (!ResetN)
-            toggle2 <= 0;
-        else begin
-            toggle2 <= ~toggle2;
-        end
-    end
-    
-    //initial begin
-    //    #(SYS_PERIOD*10000);
-    //    $dumpflush;
-    //    $finish;
-    //end
 
     always begin
         #(SYS_PERIOD/2) SysClock = ~SysClock;
