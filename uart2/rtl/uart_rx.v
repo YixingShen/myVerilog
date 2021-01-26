@@ -24,7 +24,7 @@ module uart_rx_control_unit
     parameter s_IDLE  = 1'b0;
     parameter s_RCVRS = 1'b1;
 
-    reg [1:0] state, state_next;
+    reg state, state_next;
     reg q1_RxSerial, q2_RxSerial;
 
     assign o_synRxSerial = q2_RxSerial;
@@ -85,17 +85,18 @@ module uart_rx_datapath_unit
     );
 
     localparam MAX_CYCLE_CNT_HALF = ((SYS_CLOCK * 10 / UART_BAUDRATE / 2 + 5)) / 10 - 1;
-    localparam MAX_CYCLE_CNT_FULL = ((SYS_CLOCK * 10 / UART_BAUDRATE + 5)) / 10  - 1;
+    localparam MAX_CYCLE_CNT = ((SYS_CLOCK * 10 / UART_BAUDRATE + 5)) / 10  - 1;
 
-    reg [8:0] shift_reg;
+    reg [7:0] shift_reg;
     reg handing;
-    reg [$clog2(MAX_CYCLE_CNT_FULL):0] cycle_cnt;
+    reg [$clog2(MAX_CYCLE_CNT):0] cycle_cnt;
 
     wire baudrate_half_period_cond;
     wire baudrate_period_cond;
+    //reg detStopErr;
 
     assign baudrate_half_period_cond = (cycle_cnt == MAX_CYCLE_CNT_HALF) && (o_bit_cnt == 0) ? 1 : 0;
-    assign baudrate_period_cond = (cycle_cnt == MAX_CYCLE_CNT_FULL) && (o_bit_cnt != 0) ? 1 : 0;
+    assign baudrate_period_cond = (cycle_cnt == MAX_CYCLE_CNT) && (o_bit_cnt != 0) ? 1 : 0;
 
     always @(posedge i_SysClock) begin : BaudRateGen
         if (!i_ResetN) begin
@@ -113,8 +114,9 @@ module uart_rx_datapath_unit
         if (!i_ResetN) begin
             o_bit_cnt <= 0;
             shift_reg <= 0;
-            o_RxByte <= 0;
             handing <= 0;
+            //detStopErr <= 0;
+            o_RxByte <= 0;
         end else begin
             if (i_Start) begin
                 o_bit_cnt <= 0;
@@ -122,12 +124,13 @@ module uart_rx_datapath_unit
             end else if (baudrate_half_period_cond == 1) begin
                 o_bit_cnt <= o_bit_cnt + 1;
             end else if (baudrate_period_cond == 1) begin
-                shift_reg <= {i_RxSerial,shift_reg[8:1]};
+                shift_reg <= {i_RxSerial,shift_reg[7:1]};
                 o_bit_cnt <= o_bit_cnt + 1;
 
                 if (o_bit_cnt == `MAX_BITCNT) begin
-                    o_RxByte <= shift_reg[8:1];
-                    handing = 0;
+                    handing <= 0;
+                    //detStopErr <= !i_RxSerial;
+                    o_RxByte <= shift_reg;
                 end
             end 
         end

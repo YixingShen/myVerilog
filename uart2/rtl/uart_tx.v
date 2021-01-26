@@ -26,7 +26,7 @@ module uart_tx_control_unit
 
     assign o_TxDone = (state == s_IDLE) ? 1 : 0;
 
-    reg [1:0] state, state_next;
+    reg state, state_next;
 
     always @(posedge i_SysClock) begin : UpdateStateMachine
         if (!i_ResetN) begin

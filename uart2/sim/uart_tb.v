@@ -12,7 +12,7 @@
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter UART_BAUDRATE = 115200;
+    parameter UART_BAUDRATE = SYS_CLOCK / 8;//115200;
 
     reg SysClock;
     reg ResetN;
@@ -76,8 +76,8 @@ module uart_tb;
             #(SYS_PERIOD*10);
             @(negedge SysClock)
             
-            //TxByte = 8'h55;       
-            TxByte = $random / 256;        
+            TxByte = 8'h55;       
+            //TxByte = $random / 256;        
 
             @(negedge SysClock)
             TxValid = 1;
@@ -94,10 +94,8 @@ module uart_tb;
                 $display("OK.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
             else
                 $display("NG.TxByte:0x%2X,RxByte:0x%2X",TxByte,RxByte);
-            
         end
 
-            
         #(SYS_PERIOD*100);
 
         $dumpflush;
