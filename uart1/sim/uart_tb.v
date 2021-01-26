@@ -3,11 +3,11 @@
 `timescale 1 ns / 1 ps
 `default_nettype none
 
-`define assert(signal, value) \
-        if (signal !== value) begin \
-            $display("ASSERTION FAILED in %m: signal != value"); \
-            $finish; \
-        end
+`define ASSERT(signal, value) \
+    if (signal !== value) begin \
+        $display("ASSERTION FAILED in %m: signal != value"); \
+        $finish; \
+    end
 
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
@@ -23,13 +23,12 @@ module uart_tb;
     wire TxDone;
     integer Delay;
 
-    reg RxValid;
     wire [7:0] RxByte;
     wire RxSerial;
     wire RxDone;
 
     assign RxSerial = TxSerial;
-
+     
     uart_tx
     #(
         SYS_CLOCK,
@@ -54,7 +53,6 @@ module uart_tb;
     (
         .i_ResetN(ResetN),
         .i_SysClock(SysClock),
-        .i_RxValid(RxValid),
         .o_RxByte(RxByte),
         .i_RxSerial(RxSerial),
         .o_RxDone(RxDone)
@@ -69,7 +67,6 @@ module uart_tb;
         ResetN = 0;
         TxValid = 0;
         TxByte = 0;
-        RxValid = 0;
         
         #(SYS_PERIOD*1);
         @(negedge SysClock);
