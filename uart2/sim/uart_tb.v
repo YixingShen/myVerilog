@@ -12,7 +12,7 @@
 module uart_tb;
     parameter SYS_CLOCK = 50000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter UART_BAUDRATE = SYS_CLOCK / 8;//115200;
+    parameter UART_BAUDRATE = 115200;
 
     reg SysClock;
     reg ResetN;
