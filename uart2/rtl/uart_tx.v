@@ -1,8 +1,9 @@
 //20210126 UART Transmitter
-
+// synthesis translate_off
 `timescale 1 ns / 1 ps
+// synthesis translate_on
 `default_nettype none
-`define MAX_BITCNT 9
+`define MAX_BIT_CNT 9
 
 `define ASSERT(signal, value) \
     if (signal !== value) begin \
@@ -15,7 +16,7 @@ module uart_tx_control_unit
     input wire i_ResetN,
     input wire i_SysClock,
     input wire i_TxValid,
-    input wire [3:0] i_bit_cnt,
+    input wire [3:0] i_bit_count,
     output wire o_TxDone,
     output reg o_Start,
     output reg o_Shift
@@ -49,10 +50,10 @@ module uart_tx_control_unit
                 end
             end
             s_TRANS: begin //b0,1,2,3,4,5,6,7,stop_bit
-                if (i_bit_cnt != (`MAX_BITCNT + 1))
+                if (i_bit_count != (`MAX_BIT_CNT + 1))
                     state_next = s_TRANS;
 
-                if (i_bit_cnt >= 1 && i_bit_cnt <= (`MAX_BITCNT-1))
+                if (i_bit_count >= 1 && i_bit_count <= (`MAX_BIT_CNT-1))
                     o_Shift = 1;
             end
             default: begin
@@ -73,7 +74,7 @@ module uart_tx_datapath_unit
     input wire [7:0] i_TxByte,
     input wire i_Shift,
     input wire i_Start,
-    output reg [3:0] o_bit_cnt,
+    output reg [3:0] o_bit_count,
     output wire o_TxSerial
     );
 
@@ -82,43 +83,43 @@ module uart_tx_datapath_unit
     reg [7:0] TxByte;
     reg [8:0] shift_reg;
     reg handing;
-    reg [$clog2(MAX_CYCLE_CNT):0] cycle_cnt;
+    reg [$clog2(MAX_CYCLE_CNT):0] cycle_count;
     wire baudrate_period_cond;
 
     assign o_TxSerial = shift_reg[0];
-    assign baudrate_period_cond = (cycle_cnt == MAX_CYCLE_CNT) ? 1 : 0;
+    assign baudrate_period_cond = (cycle_count == MAX_CYCLE_CNT) ? 1 : 0;
     
     always @(posedge i_SysClock) begin : BaudRateGen
         if (!i_ResetN) begin
-            cycle_cnt <= 0;
+            cycle_count <= 0;
         end else begin
             if (baudrate_period_cond == 1 || handing == 0) begin
-                cycle_cnt <= 0;
+                cycle_count <= 0;
             end else begin
-                cycle_cnt <= cycle_cnt + 1;
+                cycle_count <= cycle_count + 1;
             end 
         end
     end
     
     always @(posedge i_SysClock) begin : SerialOut
         if (!i_ResetN) begin
-            o_bit_cnt <= 0;
+            o_bit_count <= 0;
             shift_reg <= {9{1'b1}};
             TxByte <= 0;
             handing <= 0;
         end else begin
             if (i_Start) begin
-                o_bit_cnt <= 0;
+                o_bit_count <= 0;
                 shift_reg[0] <= 0;
                 TxByte <= i_TxByte;
                 handing <= 1;
             end if (baudrate_period_cond == 1) begin
                 if (handing == 1) begin
                     shift_reg <= (i_Shift == 1) ? {shift_reg[0],shift_reg[8:1]} : {1'b1,TxByte};
-                    o_bit_cnt <= o_bit_cnt + 1;
+                    o_bit_count <= o_bit_count + 1;
                 end
                 
-                if (o_bit_cnt == `MAX_BITCNT)
+                if (o_bit_count == `MAX_BIT_CNT)
                     handing = 0;
             end 
         end
@@ -141,7 +142,7 @@ module uart_tx
 
     wire Start;
     wire Shift;
-    wire [3:0] bit_cnt;
+    wire [3:0] bit_count;
     
     uart_tx_control_unit
     ctl_inst
@@ -149,7 +150,7 @@ module uart_tx
         .i_ResetN(i_ResetN),
         .i_SysClock(i_SysClock),
         .i_TxValid(i_TxValid),
-        .i_bit_cnt(bit_cnt),
+        .i_bit_count(bit_count),
         .o_TxDone(o_TxDone),
         .o_Start(Start),
         .o_Shift(Shift)
@@ -167,7 +168,7 @@ module uart_tx
         .i_TxByte(i_TxByte),
         .i_Start(Start),
         .i_Shift(Shift),
-        .o_bit_cnt(bit_cnt),
+        .o_bit_count(bit_count),
         .o_TxSerial(o_TxSerial)
     );
 

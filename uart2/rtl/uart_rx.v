@@ -1,8 +1,9 @@
 //20210126 UART Receiver 
-
+// synthesis translate_off
 `timescale 1 ns / 1 ps
+// synthesis translate_on
 `default_nettype none
-`define MAX_BITCNT 9
+`define MAX_BIT_CNT 9
 
 `define ASSERT(signal, value) \
     if (signal !== value) begin \
@@ -14,11 +15,11 @@ module uart_rx_control_unit
     (
     input wire i_ResetN,
     input wire i_SysClock,
-    input wire [3:0] i_bit_cnt,
+    input wire [3:0] i_bit_count,
     output wire o_RxDone,
     output reg o_Start,
     input wire i_RxSerial,
-    output wire o_synRxSerial
+    output wire o_SynchRxSerial
     );
 
     parameter s_IDLE  = 1'b0;
@@ -27,7 +28,7 @@ module uart_rx_control_unit
     reg state, state_next;
     reg q1_RxSerial, q2_RxSerial;
 
-    assign o_synRxSerial = q2_RxSerial;
+    assign o_SynchRxSerial = q2_RxSerial;
     assign o_RxDone = (state == s_IDLE) ? 1 : 0;
 
     always @(posedge i_SysClock, negedge i_ResetN) begin : SyncRxSerial
@@ -60,7 +61,7 @@ module uart_rx_control_unit
                 end
             end
             s_RCVRS: begin //b0,1,2,3,4,5,6,7,stop_bit
-                if (i_bit_cnt != (`MAX_BITCNT + 1))
+                if (i_bit_count != (`MAX_BIT_CNT + 1))
                     state_next = s_RCVRS;
             end
             default: begin
@@ -80,7 +81,7 @@ module uart_rx_datapath_unit
     input wire i_SysClock,
     output reg [7:0] o_RxByte,
     input wire i_Start,
-    output reg [3:0] o_bit_cnt,
+    output reg [3:0] o_bit_count,
     input wire i_RxSerial
     );
 
@@ -89,47 +90,47 @@ module uart_rx_datapath_unit
 
     reg [7:0] shift_reg;
     reg handing;
-    reg [$clog2(MAX_CYCLE_CNT):0] cycle_cnt;
+    reg [$clog2(MAX_CYCLE_CNT):0] cycle_count;
 
     wire baudrate_half_period_cond;
     wire baudrate_period_cond;
-    //reg detStopErr;
+    //reg StopBit;
 
-    assign baudrate_half_period_cond = (cycle_cnt == MAX_CYCLE_CNT_HALF) && (o_bit_cnt == 0) ? 1 : 0;
-    assign baudrate_period_cond = (cycle_cnt == MAX_CYCLE_CNT) && (o_bit_cnt != 0) ? 1 : 0;
+    assign baudrate_half_period_cond = (cycle_count == MAX_CYCLE_CNT_HALF) && (o_bit_count == 0) ? 1 : 0;
+    assign baudrate_period_cond = (cycle_count == MAX_CYCLE_CNT) && (o_bit_count != 0) ? 1 : 0;
 
     always @(posedge i_SysClock) begin : BaudRateGen
         if (!i_ResetN) begin
-            cycle_cnt <= 0;
+            cycle_count <= 0;
         end else begin
             if (baudrate_half_period_cond == 1 || baudrate_period_cond == 1 || handing == 0) begin
-                cycle_cnt <= 0;
+                cycle_count <= 0;
             end else begin
-                cycle_cnt <= cycle_cnt + 1;
+                cycle_count <= cycle_count + 1;
             end 
         end
     end
 
     always @(posedge i_SysClock) begin : SerialIn
         if (!i_ResetN) begin
-            o_bit_cnt <= 0;
+            o_bit_count <= 0;
             shift_reg <= 0;
             handing <= 0;
-            //detStopErr <= 0;
+            //StopBit <= 0;
             o_RxByte <= 0;
         end else begin
             if (i_Start) begin
-                o_bit_cnt <= 0;
+                o_bit_count <= 0;
                 handing <= 1;
             end else if (baudrate_half_period_cond == 1) begin
-                o_bit_cnt <= o_bit_cnt + 1;
+                o_bit_count <= o_bit_count + 1;
             end else if (baudrate_period_cond == 1) begin
                 shift_reg <= {i_RxSerial,shift_reg[7:1]};
-                o_bit_cnt <= o_bit_cnt + 1;
+                o_bit_count <= o_bit_count + 1;
 
-                if (o_bit_cnt == `MAX_BITCNT) begin
+                if (o_bit_count == `MAX_BIT_CNT) begin
                     handing <= 0;
-                    //detStopErr <= !i_RxSerial;
+                    //StopBit <= i_RxSerial;
                     o_RxByte <= shift_reg;
                 end
             end 
@@ -151,19 +152,19 @@ module uart_rx
     );
 
     wire Start;
-    wire synRxSerial;
-    wire [3:0] bit_cnt;
+    wire synchRxSerial;
+    wire [3:0] bit_count;
     
     uart_rx_control_unit
     ctl_inst
     (
         .i_ResetN(i_ResetN),
         .i_SysClock(i_SysClock),
-        .i_bit_cnt(bit_cnt),
+        .i_bit_count(bit_count),
         .o_RxDone(o_RxDone),
         .o_Start(Start),
         .i_RxSerial(i_RxSerial),
-        .o_synRxSerial(synRxSerial)
+        .o_SynchRxSerial(synchRxSerial)
     );
 
     uart_rx_datapath_unit
@@ -177,8 +178,8 @@ module uart_rx
         .i_SysClock(i_SysClock),
         .o_RxByte(o_RxByte),
         .i_Start(Start),
-        .o_bit_cnt(bit_cnt),
-        .i_RxSerial(synRxSerial)
+        .o_bit_count(bit_count),
+        .i_RxSerial(synchRxSerial)
     );
 
 endmodule
