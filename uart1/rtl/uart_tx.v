@@ -17,7 +17,7 @@ module uart_tx
     output wire o_TxDone
     );
 
-    parameter MAX_CYCLE_CNT = (SYS_CLOCK / UART_BAUDRATE) - 1;
+    localparam MAX_CYCLE_CNT = ((SYS_CLOCK * 10 / UART_BAUDRATE + 5)) / 10  - 1;
 
     parameter IDLE      = 2'd0;
     parameter START_BIT = 2'd1;
@@ -26,9 +26,9 @@ module uart_tx
 
     reg [1:0] state;
     reg TxSerial;
-    reg [7:0] Dout;
-    reg [3:0] bit_cnt;
-    reg [$clog2(MAX_CYCLE_CNT)] cycle_cnt;
+    reg [7:0] shift_reg;
+    reg [3:0] bit_count;
+    reg [$clog2(MAX_CYCLE_CNT):0] cycle_count;
 `ifdef DBG
     reg [7:0] dbg;
 `endif
@@ -38,7 +38,7 @@ module uart_tx
 
     always @(*) begin
         case (state)
-            DATA_BITS: TxSerial = Dout[0];
+            DATA_BITS: TxSerial = shift_reg[0];
             START_BIT: TxSerial = 0;
             default: TxSerial = 1;
         endcase
@@ -47,8 +47,8 @@ module uart_tx
     always @(posedge i_SysClock) begin
         if (!i_ResetN) begin
             state <= IDLE;
-            cycle_cnt <= 0;
-            bit_cnt <= 0;
+            cycle_count <= 0;
+            bit_count <= 0;
 `ifdef DBG
             dbg <= 0;
 `endif
@@ -56,21 +56,21 @@ module uart_tx
             case (state)
                 IDLE: begin
                     state <= i_TxValid ? START_BIT : IDLE;
-                    cycle_cnt <= 0;
+                    cycle_count <= 0;
 `ifdef DBG
                     dbg[0] <= ~dbg[0];
 `endif
                 end
                 START_BIT: begin
-                    if (cycle_cnt != MAX_CYCLE_CNT) begin
-                        cycle_cnt <= cycle_cnt + 1;
-                        Dout <= i_TxByte;
+                    if (cycle_count != MAX_CYCLE_CNT) begin
+                        cycle_count <= cycle_count + 1;
+                        shift_reg <= i_TxByte;
 `ifdef DBG
                         dbg[1] <= ~dbg[1];
 `endif
                     end else begin
-                        cycle_cnt <= 0;
-                        bit_cnt <= 0;
+                        cycle_count <= 0;
+                        bit_count <= 0;
                         state <= DATA_BITS;
 `ifdef DBG
                         dbg[2] <= ~dbg[2];
@@ -78,15 +78,15 @@ module uart_tx
                     end
                 end
                 DATA_BITS: begin
-                    if (cycle_cnt != MAX_CYCLE_CNT) begin
-                        cycle_cnt <= cycle_cnt + 1;
+                    if (cycle_count != MAX_CYCLE_CNT) begin
+                        cycle_count <= cycle_count + 1;
 `ifdef DBG
                         dbg[3] <= ~dbg[3];
 `endif
                     end else begin
-                        if (bit_cnt != 7) begin //0,1,2,3,..,7
-                            bit_cnt <= bit_cnt + 1;
-                            Dout <= {Dout[0],Dout[7:1]};
+                        if (bit_count != 7) begin //0,1,2,3,..,7
+                            bit_count <= bit_count + 1;
+                            shift_reg <= {shift_reg[0],shift_reg[7:1]};
 `ifdef DBG
                             dbg[4] <= ~dbg[4];
 `endif
@@ -97,26 +97,26 @@ module uart_tx
 `endif
                         end
                         
-                        cycle_cnt <= 0;
+                        cycle_count <= 0;
                     end
                 end
                 STOP_BIT: begin
-                    if (cycle_cnt != MAX_CYCLE_CNT) begin
-                        cycle_cnt <= cycle_cnt + 1;
+                    if (cycle_count != MAX_CYCLE_CNT) begin
+                        cycle_count <= cycle_count + 1;
 `ifdef DBG
                         dbg[5] <= ~dbg[5];
 `endif
                     end else begin
                         state <= IDLE;
-                        cycle_cnt <= 0;
+                        cycle_count <= 0;
 `ifdef DBG
                         dbg[6] <= ~dbg[6];
 `endif
                     end
                 end
                 default: begin
-                    cycle_cnt <= 0;
-                    bit_cnt <= 0;
+                    cycle_count <= 0;
+                    bit_count <= 0;
 `ifdef DBG
                     dbg[7] <= ~dbg[7];
 `endif

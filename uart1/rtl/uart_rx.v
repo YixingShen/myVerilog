@@ -12,13 +12,13 @@ module uart_rx
     input wire i_ResetN,
     input wire i_SysClock,
     input wire i_RxValid,
-    output wire [7:0] o_RxByte,
+    output reg [7:0] o_RxByte,
     input wire i_RxSerial,
     output wire o_RxDone
     );
 
-    parameter MAX_CYCLE_CNT_HALF = (SYS_CLOCK / UART_BAUDRATE / 2) - 1;
-    parameter MAX_CYCLE_CNT_FULL = (SYS_CLOCK / UART_BAUDRATE) - 1;
+    localparam MAX_CYCLE_CNT_HALF = ((SYS_CLOCK * 10 / UART_BAUDRATE / 2 + 5)) / 10 - 1;
+    localparam MAX_CYCLE_CNT = ((SYS_CLOCK * 10 / UART_BAUDRATE + 5)) / 10  - 1;
 
     parameter IDLE      = 2'd0;
     parameter START_BIT = 2'd1;
@@ -28,15 +28,15 @@ module uart_rx
     reg [1:0] state;
     reg q1_RxSerial, q2_RxSerial;
     reg [7:0] RxByte; //LSB First
+    reg [7:0] shift_reg;
     reg StopBit;
 
-    reg [3:0] bit_cnt;
-    reg [$clog2(MAX_CYCLE_CNT_FULL):0] cycle_cnt;
+    reg [3:0] bit_count;
+    reg [$clog2(MAX_CYCLE_CNT):0] cycle_count;
 `ifdef DBG
     reg [7:0] dbg;
 `endif
 
-    assign o_RxByte = RxByte;
     assign o_RxDone = (state == IDLE) || (state == STOP_BIT);
 
     always @(posedge i_SysClock, negedge i_ResetN) begin
@@ -52,10 +52,11 @@ module uart_rx
     always @(posedge i_SysClock, negedge i_ResetN) begin
         if (!i_ResetN) begin
             state <= IDLE;
-            bit_cnt <= 0;
-            cycle_cnt <= 0;
-            RxByte <= 0;
+            bit_count <= 0;
+            cycle_count <= 0;
+            o_RxByte <= 0;
             StopBit <= 0;
+            shift_reg <= 0;
 `ifdef DBG
             dbg <= 0;
 `endif
@@ -68,15 +69,15 @@ module uart_rx
 `endif
                 end
                 START_BIT: begin
-                    if (cycle_cnt != MAX_CYCLE_CNT_HALF) begin
-                        cycle_cnt <= cycle_cnt + 1;
+                    if (cycle_count != MAX_CYCLE_CNT_HALF) begin
+                        cycle_count <= cycle_count + 1;
 `ifdef DBG
                         dbg[1] <= ~dbg[1];
 `endif
                     end else begin
                         state <= DATA_BITS;
-                        cycle_cnt <= 0;
-                        bit_cnt <= 0;
+                        cycle_count <= 0;
+                        bit_count <= 0;
                         StopBit <= 0;
 `ifdef DBG
                         dbg[2] <= ~dbg[2];
@@ -84,26 +85,27 @@ module uart_rx
                     end
                 end
                 DATA_BITS: begin
-                    if (cycle_cnt != MAX_CYCLE_CNT_FULL) begin
-                        cycle_cnt <= cycle_cnt + 1;
+                    if (cycle_count != MAX_CYCLE_CNT) begin
+                        cycle_count <= cycle_count + 1;
 `ifdef DBG
                         dbg[3] <= ~dbg[3];
 `endif
                     end else begin
-                        if (bit_cnt != 8) begin
-                            bit_cnt <= bit_cnt + 1;
-                            RxByte <= {q2_RxSerial,RxByte[7:1]};
+                        if (bit_count != 8) begin
+                            bit_count <= bit_count + 1;
+                            shift_reg <= {q2_RxSerial,shift_reg[7:1]};
 `ifdef DBG
                             dbg[4] <= ~dbg[4];
 `endif
                         end else begin
                             state <= STOP_BIT;
+                            o_RxByte <= shift_reg;
 `ifdef DBG
                             dbg[5] <= ~dbg[5];
 `endif
                         end
 
-                        cycle_cnt <= 0;
+                        cycle_count <= 0;
                     end
                 end
                 STOP_BIT: begin
@@ -115,8 +117,8 @@ module uart_rx
                 end
                 default: begin
                     state <= IDLE;
-                    cycle_cnt <= 0;
-                    bit_cnt <= 0;
+                    cycle_count <= 0;
+                    bit_count <= 0;
                 end
             endcase
         end
