@@ -40,14 +40,14 @@ module bt656_tx
     localparam F2_VACT_SAV = 8'hC7;
 
     //[4:1] for EAV,SAV,H,V; [0] for F
-    parameter s_MSB4BIT_BLK_EAV     = 4'b1011; //B
-    parameter s_MSB4BIT_BLK_EAV2SAV = 4'b0011; //3
-    parameter s_MSB4BIT_BLK_SAV     = 4'b0111; //7
-    parameter s_MSB4BIT_BLK_HACT    = 4'b0001; //1
-    parameter s_MSB4BIT_ACT_EAV     = 4'b1010; //A
-    parameter s_MSB4BIT_ACT_EAV2SAV = 4'b0010; //2
-    parameter s_MSB4BIT_ACT_SAV     = 4'b0110; //6
-    parameter s_MSB4BIT_ACT_HACT    = 4'b0000; //0
+    parameter s_MSB4BIT_VBLK_EAV     = 4'b1011; //B
+    parameter s_MSB4BIT_VBLK_EAV2SAV = 4'b0011; //3
+    parameter s_MSB4BIT_VBLK_SAV     = 4'b0111; //7
+    parameter s_MSB4BIT_VBLK_HACT    = 4'b0001; //1
+    parameter s_MSB4BIT_VACT_EAV     = 4'b1010; //A
+    parameter s_MSB4BIT_VACT_EAV2SAV = 4'b0010; //2
+    parameter s_MSB4BIT_VACT_SAV     = 4'b0110; //6
+    parameter s_MSB4BIT_VACT_HACT    = 4'b0000; //0
     
     reg [$clog2(SYS_CLOCK / PIXEL_CLOCK):0] prescaler_count;
     reg [$clog2(HACT_PIXELS + HBLK_PIXELS):0] pixel_count;
@@ -126,7 +126,7 @@ module bt656_tx
 
     always @(posedge PixelClock, negedge i_ResetN) begin : UpdateStatusMachine
         if (!i_ResetN) begin
-            status <= {s_MSB4BIT_BLK_EAV, 1'b0};
+            status <= {s_MSB4BIT_VBLK_EAV, 1'b0};
             Displaying <= 0;
         end else if (i_TxValid && Displaying == 0) begin
             Displaying <= 1;
@@ -201,59 +201,59 @@ module bt656_tx
         next_status[0] = InterlaceMode == 0 ? 0 : FieldId;
         
         case (status[4:1])
-            s_MSB4BIT_BLK_EAV: begin
+            s_MSB4BIT_VBLK_EAV: begin
                 if (pixel_count == 4)
-                    next_status[4:1] = s_MSB4BIT_BLK_EAV2SAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_EAV2SAV;
                 else
-                    next_status[4:1] = s_MSB4BIT_BLK_EAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_EAV;
             end
-            s_MSB4BIT_BLK_EAV2SAV: begin
+            s_MSB4BIT_VBLK_EAV2SAV: begin
                 if (pixel_count == (HBLK_PIXELS - 4))
-                    next_status[4:1] = s_MSB4BIT_BLK_SAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_SAV;
                 else
-                    next_status[4:1] = s_MSB4BIT_BLK_EAV2SAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_EAV2SAV;
             end
-            s_MSB4BIT_BLK_SAV: begin
+            s_MSB4BIT_VBLK_SAV: begin
                  if (pixel_count == HBLK_PIXELS)
-                    next_status[4:1] = s_MSB4BIT_BLK_HACT;
+                    next_status[4:1] = s_MSB4BIT_VBLK_HACT;
             end
-            s_MSB4BIT_BLK_HACT: begin
+            s_MSB4BIT_VBLK_HACT: begin
                 if (pixel_count == 0 && VBLK_HACT_to_VACT_EAV_Cond)
-                    next_status[4:1] = s_MSB4BIT_ACT_EAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_EAV;
                 else if (pixel_count == 0)
-                    next_status[4:1] = s_MSB4BIT_BLK_EAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_EAV;
                 else
-                    next_status[4:1] = s_MSB4BIT_BLK_HACT;
+                    next_status[4:1] = s_MSB4BIT_VBLK_HACT;
             end
-            s_MSB4BIT_ACT_EAV: begin
+            s_MSB4BIT_VACT_EAV: begin
                 if (pixel_count == 4)
-                    next_status[4:1] = s_MSB4BIT_ACT_EAV2SAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_EAV2SAV;
                 else
-                    next_status[4:1] = s_MSB4BIT_ACT_EAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_EAV;
             end
-            s_MSB4BIT_ACT_EAV2SAV: begin
+            s_MSB4BIT_VACT_EAV2SAV: begin
                 if (pixel_count == (HBLK_PIXELS - 4))
-                    next_status[4:1] = s_MSB4BIT_ACT_SAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_SAV;
                 else
-                    next_status[4:1] = s_MSB4BIT_ACT_EAV2SAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_EAV2SAV;
             end
-            s_MSB4BIT_ACT_SAV: begin
+            s_MSB4BIT_VACT_SAV: begin
                 if (pixel_count == HBLK_PIXELS)
-                    next_status[4:1] = s_MSB4BIT_ACT_HACT;
+                    next_status[4:1] = s_MSB4BIT_VACT_HACT;
                 else
-                    next_status[4:1] = s_MSB4BIT_ACT_SAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_SAV;
             end
-            s_MSB4BIT_ACT_HACT: begin
+            s_MSB4BIT_VACT_HACT: begin
                 if (pixel_count == 0 && (line_count == 0 || VACT_HACT_to_VBLK_EAV_Cond)) begin
-                    next_status[4:1] = s_MSB4BIT_BLK_EAV;
+                    next_status[4:1] = s_MSB4BIT_VBLK_EAV;
                 end else if (pixel_count == 0) begin
-                    next_status[4:1] = s_MSB4BIT_ACT_EAV;
+                    next_status[4:1] = s_MSB4BIT_VACT_EAV;
                 end else begin
-                    next_status[4:1] = s_MSB4BIT_ACT_HACT;
+                    next_status[4:1] = s_MSB4BIT_VACT_HACT;
                 end
             end
             default: begin
-                next_status[4:1] = s_MSB4BIT_BLK_EAV;
+                next_status[4:1] = s_MSB4BIT_VBLK_EAV;
             end
         endcase
     end
