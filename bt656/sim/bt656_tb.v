@@ -4,9 +4,9 @@
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-`define _480I60 
+//`define _480I60 
 //`define _720P30 
-//`define _ANY_
+`define _ANY_
 
 `define ASSERT(signal, value) \
         if (signal !== value) begin \
@@ -15,9 +15,9 @@
         end
 
 module bt656_tb;
-    parameter SYS_CLOCK = 500000000;//50000000;
+    parameter SYS_CLOCK = 500000000;
     parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter PIXEL_CLOCK = SYS_CLOCK;//27000000;
+    parameter PIXEL_CLOCK = 27000000;
     
 `ifdef _ANY_
     //Other
