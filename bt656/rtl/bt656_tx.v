@@ -49,7 +49,7 @@ module bt656_tx
     parameter s_MSB4BIT_VACT_SAV     = 4'b0110; //6
     parameter s_MSB4BIT_VACT_HACT    = 4'b0000; //0
     
-    reg [$clog2(SYS_CLOCK / PIXEL_CLOCK):0] prescaler_count;
+    reg [$clog2(SYS_CLOCK / PIXEL_CLOCK) - 1:0] prescaler_count;
     reg [$clog2(HACT_PIXELS + HBLK_PIXELS):0] pixel_count;
     reg [$clog2(VACT_LINES_F2 + VBLK_LINES_F2_TOP + VBLK_LINES_F2_BOT):0] line_count;
     reg FieldId;
@@ -77,7 +77,7 @@ module bt656_tx
     assign o_Fsignal = Fsignal;
     assign o_Data = Displaying == 1 ? Dout[31:24] : 0;
     assign o_PixelClock = Displaying == 1 ? ~PixelClock : 0;
-    assign PixelClock = prescaler_count[$clog2(SYS_CLOCK / PIXEL_CLOCK)];
+    assign PixelClock = prescaler_count[$clog2(SYS_CLOCK / PIXEL_CLOCK) - 1];
 
     always @(posedge i_SysClock, negedge i_ResetN) begin : FreqDivisor
         if (!i_ResetN) begin

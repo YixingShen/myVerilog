@@ -1,12 +1,11 @@
 //20210202 BT656 Test Bench
 
-//`timescale 1 ns / 1 ps
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-//`define _480I60 
-//`define _720P30 
-`define _ANY_
+`define _TIMING_480I60_
+//`define _TIMING_720P30_
+//`define _TIMING_OTHER_
 
 `define ASSERT(signal, value) \
         if (signal !== value) begin \
@@ -15,12 +14,12 @@
         end
 
 module bt656_tb;
-    parameter SYS_CLOCK = 500000000;
-    parameter SYS_PERIOD = (10 ** 9) / SYS_CLOCK;
-    parameter PIXEL_CLOCK = 27000000;
-    
-`ifdef _ANY_
+
+`ifdef _TIMING_OTHER_
     //Other
+    parameter SYS_CLOCK         = 27000000;
+    parameter SYS_PERIOD        = (10 ** 9) / SYS_CLOCK;
+    parameter PIXEL_CLOCK       = 27000000;
     parameter INTERLACE         = 0; //0: Progressive; 1: Interlace
     parameter FIRST_FIELD       = 0; //0: ODD; 1: EVEN
     parameter FIRST_LINE        = 0;
@@ -34,8 +33,11 @@ module bt656_tb;
     parameter VBLK_LINES_F2_BOT = 5;
 `endif
 
-`ifdef _480I60
+`ifdef _TIMING_480I60_
     //480I60@27MHz
+    parameter SYS_CLOCK         = 27000000;
+    parameter SYS_PERIOD        = (10 ** 9) / SYS_CLOCK;
+    parameter PIXEL_CLOCK       = 27000000;
     parameter INTERLACE         = 1; //0: Progressive; 1: Interlace
     parameter FIRST_FIELD       = 1; //0: ODD; 1: EVEN
     parameter FIRST_LINE        = (VACT_LINES_F2 + VBLK_LINES_F2_TOP + VBLK_LINES_F2_BOT - 1) - 3 + 1; 
@@ -49,8 +51,11 @@ module bt656_tb;
     parameter VBLK_LINES_F2_BOT = 5;
 `endif
 
-`ifdef _720P30
+`ifdef _TIMING_720P30_
     //720P30@74.25MHz
+    parameter SYS_CLOCK         = 74250000;
+    parameter SYS_PERIOD        = (10 ** 9) / SYS_CLOCK;
+    parameter PIXEL_CLOCK       = 74250000;
     parameter INTERLACE         = 0; //0: Progressive; 1: Interlace
     parameter FIRST_FIELD       = 0; //0: ODD; 1: EVEN
     parameter FIRST_LINE        = 0;
@@ -66,7 +71,6 @@ module bt656_tb;
 
     reg SysClock;
     reg ResetN;
-    
     reg TxValid;
     wire [7:0] Data;
     wire PixelClock;
