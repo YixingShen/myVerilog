@@ -3,7 +3,8 @@
 `timescale 1 ns / 100 ps
 `default_nettype none
 
-`define _TIMING_480I60_
+`define _TIMING_PAL_576I50_
+//`define _TIMING_NTSC_480I60_
 //`define _TIMING_720P30_
 //`define _TIMING_OTHER_
 
@@ -33,7 +34,7 @@ module bt656_tb;
     parameter VBLK_LINES_F2_BOT = 5;
 `endif
 
-`ifdef _TIMING_480I60_
+`ifdef _TIMING_NTSC_480I60_
     //480I60@27MHz
     parameter SYS_CLOCK         = 27000000;
     parameter SYS_PERIOD        = (10 ** 9) / SYS_CLOCK;
@@ -49,6 +50,24 @@ module bt656_tb;
     parameter VACT_LINES_F2     = 240; 
     parameter VBLK_LINES_F2_TOP = 18;
     parameter VBLK_LINES_F2_BOT = 5;
+`endif
+
+`ifdef _TIMING_PAL_576I50_
+    //576I50@27MHz
+    parameter SYS_CLOCK         = 27000000;
+    parameter SYS_PERIOD        = (10 ** 9) / SYS_CLOCK;
+    parameter PIXEL_CLOCK       = 27000000;
+    parameter INTERLACE         = 1; //0: Progressive; 1: Interlace
+    parameter FIRST_FIELD       = 0; //0: ODD; 1: EVEN
+    parameter FIRST_LINE        = 0; 
+    parameter HACT_PIXELS       = 720*2;
+    parameter HBLK_PIXELS       = (12+64+68)*2;
+    parameter VACT_LINES_F1     = 288;
+    parameter VBLK_LINES_F1_TOP = 22;
+    parameter VBLK_LINES_F1_BOT = 2;
+    parameter VACT_LINES_F2     = 288; 
+    parameter VBLK_LINES_F2_TOP = 22;
+    parameter VBLK_LINES_F2_BOT = 3;
 `endif
 
 `ifdef _TIMING_720P30_
